@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline LLM Evaluation</title>
+    <script>
+        function evaluateModel(type) {
+            const button = document.getElementById(type + "-btn");
+            const resultsDiv = document.getElementById(type + "-results");
+
+            button.disabled = true;
+            button.innerText = "Evaluating...";
+            resultsDiv.innerHTML = "<p>Processing...</p>";
+
+            fetch(`/evaluate/${type}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = "";
+                    
+                    if (type === "mlm") {
+                        for (const model in data) {
+                            const result = data[model];
+                            let modelDiv = `<h3>${result.Model}</h3><p>Accuracy: ${result.Accuracy.toFixed(4)}</p><h4>Sample Predictions:</h4><ul>`;
+                            result.Responses.forEach(res => {
+                                modelDiv += `<li>Original: ${res.Original} | Predicted: ${res.Predicted} | Correct: ${res.Correct}</li>`;
+                            });
+                            modelDiv += "</ul>";
+                            resultsDiv.innerHTML += modelDiv;
+                        }
+                    } else {
+                        for (const model in data) {
+                            const result = data[model];
+                            let modelDiv = `<h3>${result.Model}</h3>
+                                <p>BLEU Score: ${result["BLEU Score"].toFixed(4)}</p>
+                                <p>ROUGE-1: ${result["ROUGE-1"].toFixed(4)}</p>
+                                <p>ROUGE-2: ${result["ROUGE-2"].toFixed(4)}</p>
+                                <p>ROUGE-L: ${result["ROUGE-L"].toFixed(4)}</p>
+                                <p>Perplexity: ${result.Perplexity.toFixed(4)}</p>`;
+                            resultsDiv.innerHTML += modelDiv;
+                        }
+                    }
+                    
+                    button.disabled = false;
+                    button.innerText = `Evaluate ${type.toUpperCase()}`;
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML = `<p style="color: red;">Error: ${error}</p>`;
+                    button.disabled = false;
+                    button.innerText = `Evaluate ${type.toUpperCase()}`;
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>Offline LLM Evaluation</h1>
+
+    <h2>Evaluate Models</h2>
+    <button id="mlm-btn" onclick="evaluateModel('mlm')">Evaluate MLM</button>
+    <button id="clm-btn" onclick="evaluateModel('clm')">Evaluate CLM</button>
+
+    <h2>Masked Language Model (MLM) Results</h2>
+    <div id="mlm-results"></div>
+
+    <h2>Causal Language Model (CLM) Results</h2>
+    <div id="clm-results"></div>
+</body>
+</html>

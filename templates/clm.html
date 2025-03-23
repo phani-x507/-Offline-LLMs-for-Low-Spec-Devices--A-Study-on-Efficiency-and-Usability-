@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}} Offline LLM Evaluation</title>
+    <script>
+        function evaluateModel(type) {
+            const button = document.getElementById(type + "-btn");
+            const resultsDiv = document.getElementById(type + "-results");
+
+            button.disabled = true;
+            button.innerText = "Evaluating...";
+            resultsDiv.innerHTML = "<p>Processing...</p>";
+
+            fetch(`/evaluate/${type}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = "";
+
+                    if (type === "mlm") {
+                        for (const model in data) {
+                            const result = data[model];
+                            let modelDiv = `<h3>${model}</h3><p>Accuracy: ${result.Accuracy.toFixed(4)}</p><h4>Sample Predictions:</h4><ul>`;
+                            result.Responses.forEach(res => {
+                                modelDiv += `<li><b>Original:</b> ${res.Original} <br> <b>Masked:</b> ${res.Masked} <br> <b>Predicted:</b> ${res.Predicted} <br> <b>Correct:</b> ${res.Correct ? "✅" : "❌"}</li><br>`;
+                            });
+                            modelDiv += "</ul>";
+                            resultsDiv.innerHTML += modelDiv;
+                        }
+                    } else {
+                        for (const model in data) {
+                            const result = data[model];
+                            let modelDiv = `<h3>${model}</h3>
+                                <p>BLEU Score: ${result["BLEU Score"].toFixed(4)}</p>
+                                <p>ROUGE-1: ${result["ROUGE-1"].toFixed(4)}</p>
+                                <p>ROUGE-2: ${result["ROUGE-2"].toFixed(4)}</p>
+                                <p>ROUGE-L: ${result["ROUGE-L"].toFixed(4)}</p>
+                                <p>Perplexity: ${result.Perplexity.toFixed(4)}</p>
+                                <h4>Generated Responses:</h4><ul>`;
+
+                            result.responses.forEach((resp, index) => {
+                                modelDiv += `<li><b>Input:</b> ${result.prompts[index]} <br> <b>Generated:</b> ${resp}</li><br>`;
+                            });
+
+                            modelDiv += "</ul>";
+                            resultsDiv.innerHTML += modelDiv;
+                        }
+                    }
+
+                    button.disabled = false;
+                    button.innerText = `Evaluate ${type.toUpperCase()}`;
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML = `<p style="color: red;">Error: ${error}</p>`;
+                    button.disabled = false;
+                    button.innerText = `Evaluate ${type.toUpperCase()}`;
+                });
+        }
+    </script>
+
+    <link rel="stylesheet" href='{{url_for("static",filename="style.css")}}'>
+</head>
+
+<body>
+
+    <div class="top_bar borders">
+        <h1>Offline LLM Evaluation</h1>
+
+    </div>
+
+
+
+
+    <div class="main_body borders">
+        <div class="sidebar borders">
+            <h2>Evaluate Models</h2>
+            <button onclick="window.location.assign('/')" >MLM Evaluation</button>
+            <button onclick="window.location.assign('/clm')">CLM Evaluation</button>
+        </div>
+        <div class="m_div">
+            <div class="clm_div">
+                <button id="clm-btn" onclick="evaluateModel('clm')">Evaluate CLM</button> <label for=""> -> wikitext-2-raw-v1</label>
+                <hr>
+                <h2>Causal Language Model (CLM) Results | Gemma 2b, Tiny LLama, Phi-2</h2>
+
+                <div id="clm-results"></div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+</body>
+
+</html>
