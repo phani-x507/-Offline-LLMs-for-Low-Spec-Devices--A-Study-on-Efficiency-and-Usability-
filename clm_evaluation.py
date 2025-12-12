@@ -34,7 +34,7 @@ filtered_texts = [t for t in dataset["text"] if isinstance(t, str) and len(t.spl
 if len(filtered_texts) < 5:
     raise RuntimeError("Not enough valid sentences in dataset after filtering.")
 
-# function to get N random samples (non-repeating)
+
 def get_random_samples(n=5):
     return random.sample(filtered_texts, n)
 
