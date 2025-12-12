@@ -1,0 +1,11 @@
+flask
+torch
+transformers
+datasets
+evaluate
+numpy
+rouge_score
+nltk
+absl-py
+scikit-learn
+sentencepiece

@@ -1,3 +1,7 @@
 models_offline
+cache_models
+os
+torch
+.venv/
 previous
 __pycache__

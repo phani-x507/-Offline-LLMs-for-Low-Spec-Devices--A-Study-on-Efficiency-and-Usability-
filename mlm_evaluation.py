@@ -6,7 +6,7 @@ import numpy as np
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-MODEL_DIR = "models_offline"
+MODEL_DIR = "cache_models"
 
 mlm_models = {
     "DistilBERT": f"{MODEL_DIR}/distilbert-base-uncased",
